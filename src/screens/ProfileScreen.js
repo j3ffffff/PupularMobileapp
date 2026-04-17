@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useNavigation } from '@react-navigation/native';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useAnimals, useUser } from '../context/AppContext';
 import { resetPassword } from '../services/auth';
 import { COLORS, RADIUS, SHADOW } from '../constants/theme';
@@ -12,6 +13,7 @@ import { sharePupularApp } from '../utils/shareApp';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
+  const tabBarHeight = useBottomTabBarHeight();
   const { filters } = useAnimals();
   const { profile, liked, superLiked, stats, finishOnboarding, authUser, syncing, authReady, handleSignIn, handleEmailSignUp, handleEmailSignIn, handleSignOut } = useUser();
   const [editingName, setEditingName] = useState(false);
@@ -83,7 +85,11 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabBarHeight + 24 }]}
+      >
         {/* Avatar */}
         <View style={styles.avatar}>
           <Text style={styles.avatarEmoji}>🐾</Text>
@@ -315,6 +321,7 @@ function Stat({ n, label, emoji }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.surface },
+  scrollContent: { flexGrow: 1 },
   avatar: {
     width: 90, height: 90, borderRadius: 45,
     backgroundColor: COLORS.coralGlow, alignSelf: 'center',
