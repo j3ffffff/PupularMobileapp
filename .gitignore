@@ -1,0 +1,16 @@
+# Local dependencies
+node_modules/
+
+# macOS noise
+.DS_Store
+assets/.DS_Store
+
+# Local/mobile artifacts
+screenshots/
+assets/screenshot1_ios.png
+assets/screenshot2_ios.png
+README-CANONICAL-PUPULAR-APP-PATH.md
+GoogleService-Info.plist
+
+# Expo local state
+.expo/

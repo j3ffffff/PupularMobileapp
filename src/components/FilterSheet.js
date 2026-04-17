@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, Modal, TouchableOpacity,
   TextInput, ScrollView, Dimensions,
@@ -34,10 +34,18 @@ const SEX_OPTS = [
   { label: '♀ Female', value: 'Female' },
   { label: '⚧ Either', value: null },
 ];
+const DISTANCE_OPTS = [5, 10, 25, 50, 100, 250, 500, 1000, 3000].map((miles) => ({
+  label: `${miles} mi`,
+  value: miles,
+}));
 
 export default function FilterSheet({ visible, onClose }) {
   const { filters, applyFilters, loadAnimals } = useAnimals();
   const [local, setLocal] = useState({ ...filters });
+
+  useEffect(() => {
+    if (visible) setLocal({ ...filters });
+  }, [visible, filters]);
 
   const set = (key, val) => setLocal((p) => ({ ...p, [key]: val }));
 
@@ -101,6 +109,9 @@ export default function FilterSheet({ visible, onClose }) {
             />
           </View>
 
+          <ChipGroup label="📏 Distance" options={DISTANCE_OPTS} field="miles" />
+          <Text style={styles.helperText}>Currently showing pets within {local.miles} miles.</Text>
+
           {/* Species */}
           <View style={styles.group}>
             <Text style={styles.groupLabel}>🐾 Pet Type</Text>
@@ -163,6 +174,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface, borderRadius: RADIUS.lg,
     paddingHorizontal: 16, paddingVertical: 14,
     fontSize: 16, fontWeight: '600', color: COLORS.ink,
+  },
+  helperText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: COLORS.muted,
+    lineHeight: 20,
   },
   speciesGrid: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   speciesBtn: {

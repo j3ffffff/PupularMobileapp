@@ -2,7 +2,7 @@
   "expo": {
     "name": "Pupular",
     "slug": "pupular",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,9 +14,13 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.pupular",
-      "buildNumber": "1",
+      "buildNumber": "6",
+      "usesAppleSignIn": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Pupular uses your location to find adorable rescue pets near you."
+        "CFBundleDisplayName": "Pupular",
+        "CFBundleName": "Pupular",
+        "NSLocationWhenInUseUsageDescription": "Pupular uses your location to find adorable rescue pets near you.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -36,7 +40,8 @@
       }
     },
     "plugins": [
-      "expo-location"
+      "expo-location",
+      "expo-apple-authentication"
     ],
     "owner": "jfeuerwashere"
   }
