@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   View, Text, StyleSheet, FlatList, Image,
-  TouchableOpacity, Dimensions,
+  TouchableOpacity, Dimensions, Share, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,29 @@ import { COLORS, RADIUS, SHADOW, SPECIES_EMOJI } from '../constants/theme';
 const { width: W } = Dimensions.get('window');
 const GAP = 10;
 const CARD = (W - 40 - GAP) / 2;
+
+const shareAnimal = async (animal) => {
+  const locationLabel = [animal.location?.city || animal.org?.city, animal.location?.state || animal.org?.state]
+    .filter(Boolean)
+    .join(', ');
+  const canonicalUrl = animal.id ? `https://www.pupular.app/animal/${encodeURIComponent(animal.id)}` : 'https://www.pupular.app';
+  const summaryBits = [
+    `${animal.name} on Pupular 🐾`,
+    animal.breedPrimary ? `${animal.breedPrimary}${animal.isMixed ? ' mix' : ''}` : null,
+    animal.ageGroup || animal.species,
+    locationLabel ? `Near ${locationLabel}` : null,
+  ].filter(Boolean);
+
+  try {
+    await Share.share({
+      title: `Meet ${animal.name}`,
+      message: `${summaryBits.join(' · ')}\n\nCheck out ${animal.name}'s profile: ${canonicalUrl}`,
+      url: canonicalUrl,
+    });
+  } catch (error) {
+    Alert.alert('Share unavailable', `We couldn't open the share sheet right now. ${error?.message || ''}`.trim());
+  }
+};
 
 export default function LikesScreen() {
   const nav = useNavigation();
@@ -75,6 +98,10 @@ export default function LikesScreen() {
                 </View>
               )}
 
+              <TouchableOpacity style={styles.shareBtn} onPress={() => shareAnimal(item)}>
+                <Ionicons name="share-social" size={14} color={COLORS.white} />
+              </TouchableOpacity>
+
               <TouchableOpacity style={styles.unlikeBtn} onPress={() => unlikeAnimal(item.id)}>
                 <Ionicons name="close" size={14} color={COLORS.white} />
               </TouchableOpacity>
@@ -114,6 +141,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 3,
   },
   superTagText: { fontSize: 12 },
+  shareBtn: {
+    position: 'absolute', top: 10, right: 44,
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center', justifyContent: 'center',
+  },
   unlikeBtn: {
     position: 'absolute', top: 10, right: 10,
     width: 28, height: 28, borderRadius: 14,

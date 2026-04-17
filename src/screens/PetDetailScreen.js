@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
-  TouchableOpacity, Dimensions, Linking, Alert, Animated,
+  TouchableOpacity, Dimensions, Linking, Alert, Animated, Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +25,29 @@ export default function PetDetailScreen() {
   const toggleLike = () => {
     if (isLiked) unlikeAnimal(animal.id);
     else likeAnimal(animal);
+  };
+
+  const shareAnimal = async () => {
+    const locationLabel = [animal.location?.city || animal.org?.city, animal.location?.state || animal.org?.state]
+      .filter(Boolean)
+      .join(', ');
+    const canonicalUrl = animal.id ? `https://www.pupular.app/animal/${encodeURIComponent(animal.id)}` : 'https://www.pupular.app';
+    const summaryBits = [
+      `${animal.name} on Pupular 🐾`,
+      animal.breedPrimary ? `${animal.breedPrimary}${animal.isMixed ? ' mix' : ''}` : null,
+      animal.ageGroup || animal.species,
+      locationLabel ? `Near ${locationLabel}` : null,
+    ].filter(Boolean);
+
+    try {
+      await Share.share({
+        title: `Meet ${animal.name}`,
+        message: `${summaryBits.join(' · ')}\n\nCheck out ${animal.name}'s profile: ${canonicalUrl}`,
+        url: canonicalUrl,
+      });
+    } catch (error) {
+      Alert.alert('Share unavailable', `We couldn't open the share sheet right now. ${error?.message || ''}`.trim());
+    }
   };
 
   const contactShelter = () => {
@@ -85,9 +108,14 @@ export default function PetDetailScreen() {
         <TouchableOpacity style={styles.topBtn} onPress={() => nav.goBack()}>
           <Ionicons name="chevron-down" size={24} color={COLORS.ink} />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.topBtn, isLiked && { backgroundColor: COLORS.coralGlow }]} onPress={toggleLike}>
-          <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={22} color={isLiked ? COLORS.coral : COLORS.ink} />
-        </TouchableOpacity>
+        <View style={styles.topActions}>
+          <TouchableOpacity style={styles.topBtn} onPress={shareAnimal}>
+            <Ionicons name="share-social-outline" size={20} color={COLORS.ink} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.topBtn, isLiked && { backgroundColor: COLORS.coralGlow }]} onPress={toggleLike}>
+            <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={22} color={isLiked ? COLORS.coral : COLORS.ink} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} bounces>
@@ -245,6 +273,10 @@ const styles = StyleSheet.create({
   topBar: {
     position: 'absolute', top: 52, left: 0, right: 0, zIndex: 10,
     flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16,
+  },
+  topActions: {
+    flexDirection: 'row',
+    gap: 10,
   },
   topBtn: {
     width: 42, height: 42, borderRadius: 21,
