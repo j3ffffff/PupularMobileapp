@@ -16,6 +16,7 @@ import SwipeScreen from './src/screens/SwipeScreen';
 import LikesScreen from './src/screens/LikesScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import PetDetailScreen from './src/screens/PetDetailScreen';
+import AdoptionToolsScreen from './src/screens/AdoptionToolsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -60,7 +61,16 @@ function MainTabs() {
 }
 
 function RootNavigator() {
-  const { profile } = useUser();
+  const { profile, profileReady } = useUser();
+
+  if (!profileReady) {
+    return (
+      <View style={styles.bootScreen}>
+        <Ionicons name="paw" size={34} color={COLORS.coral} />
+        <Text style={styles.bootText}>Loading Pupular…</Text>
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -73,6 +83,7 @@ function RootNavigator() {
           <Stack.Screen name="Main" component={MainTabs} />
           <Stack.Screen name="EditPreferences" component={OnboardingScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="PetDetail" component={PetDetailScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="AdoptionTools" component={AdoptionToolsScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         </Stack.Group>
       )}
     </Stack.Navigator>
@@ -131,5 +142,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.3,
+  },
+  bootScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    gap: 12,
+  },
+  bootText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.ink,
   },
 });

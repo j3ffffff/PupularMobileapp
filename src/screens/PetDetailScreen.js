@@ -245,6 +245,20 @@ export default function PetDetailScreen() {
             </View>
           )}
 
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Adoption Tools</Text>
+            <TouchableOpacity style={styles.toolsCard} onPress={() => nav.navigate('AdoptionTools')} activeOpacity={0.88}>
+              <View style={styles.toolsIcon}>
+                <Ionicons name="construct-outline" size={20} color={COLORS.amber} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.toolsTitle}>Get ready for adoption</Text>
+                <Text style={styles.toolsSub}>Open checklist, insurance, and invite tools</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={COLORS.muted} />
+            </TouchableOpacity>
+          </View>
+
           <View style={{ height: 100 }} />
         </View>
       </ScrollView>
@@ -337,6 +351,16 @@ const styles = StyleSheet.create({
   },
   orgName: { fontSize: 15, fontWeight: '700', color: COLORS.ink },
   orgLocation: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
+  toolsCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, padding: 14,
+  },
+  toolsIcon: {
+    width: 42, height: 42, borderRadius: 21,
+    backgroundColor: '#FFF5E6', alignItems: 'center', justifyContent: 'center',
+  },
+  toolsTitle: { fontSize: 15, fontWeight: '700', color: COLORS.ink },
+  toolsSub: { fontSize: 12, color: COLORS.muted, marginTop: 2 },
   // CTA
   cta: {
     position: 'absolute', bottom: 0, left: 0, right: 0,

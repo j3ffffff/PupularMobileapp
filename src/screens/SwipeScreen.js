@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAnimals, useUser } from '../context/AppContext';
 import { COLORS, RADIUS, SHADOW, AGE_COLORS, SPECIES_EMOJI } from '../constants/theme';
 import FilterSheet from '../components/FilterSheet';
+import { sharePupularApp } from '../utils/shareApp';
 
 const { width: W, height: H } = Dimensions.get('window');
 const CARD_W = W * 0.9;
@@ -24,7 +25,7 @@ const haptic = () => {
 
 export default function SwipeScreen() {
   const nav = useNavigation();
-  const { animals, loading, error, loadAnimals, hasMore, resetCount, filters } = useAnimals();
+  const { animals, loading, error, loadAnimals, hasMore, resetCount, filtersReady } = useAnimals();
   const { likeAnimal, passAnimal, superLikeAnimal, stats } = useUser();
   const [index, setIndex] = useState(0);
   const [showFilter, setShowFilter] = useState(false);
@@ -45,8 +46,11 @@ export default function SwipeScreen() {
   useEffect(() => { animalsRef.current = animals; }, [animals]);
   useEffect(() => { indexRef.current = index; }, [index]);
 
-  // Load on mount. filtersRef is already updated by applyFilters before navigation.
-  useEffect(() => { loadAnimals(true); }, []);
+  // Load once saved filters have been restored.
+  useEffect(() => {
+    if (!filtersReady) return;
+    loadAnimals(true);
+  }, [filtersReady, loadAnimals]);
 
   // Reset index to 0 whenever a full reload happens (filter change, zip change, etc.)
   useEffect(() => { setIndex(0); }, [resetCount]);
@@ -56,6 +60,13 @@ export default function SwipeScreen() {
     const toPreload = animals.slice(index + 1, index + 4).map((a) => a.primaryPhoto).filter(Boolean);
     toPreload.forEach((uri) => Image.prefetch(uri).catch(() => {}));
   }, [index, animals]);
+
+  // Reload if animals were cleared (e.g. filter/ZIP change from EditPreferences)
+  useEffect(() => {
+    if (filtersReady && animals.length === 0 && !loading && !error && hasMore) {
+      loadAnimals(true);
+    }
+  }, [filtersReady, animals.length, loading, error, hasMore]);
 
   useEffect(() => {
     if (animals.length === 0) return; // don't trigger load-more when list was just cleared
@@ -116,8 +127,11 @@ export default function SwipeScreen() {
   })).current;
 
   // ─── Render states ─────────────────────────────────────────
-  // Show spinner while loading OR before first load starts (animals empty, no error)
-  if ((loading || animals.length === 0) && !error) {
+  const isPreparingReload = filtersReady && animals.length === 0 && !loading && !error && hasMore;
+  const isInitialLoading = !filtersReady || (loading && animals.length === 0) || isPreparingReload;
+  const isNoResults = filtersReady && !loading && !error && animals.length === 0 && !hasMore;
+
+  if (isInitialLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <Header onFilter={() => setShowFilter(true)} />
@@ -125,6 +139,7 @@ export default function SwipeScreen() {
           <ActivityIndicator size="large" color={COLORS.coral} />
           <Text style={styles.loadingText}>Finding pets near you...</Text>
         </View>
+        <FilterSheet visible={showFilter} onClose={() => setShowFilter(false)} />
       </SafeAreaView>
     );
   }
@@ -141,6 +156,33 @@ export default function SwipeScreen() {
             <Text style={styles.retryText}>Try again</Text>
           </TouchableOpacity>
         </View>
+        <FilterSheet visible={showFilter} onClose={() => setShowFilter(false)} />
+      </SafeAreaView>
+    );
+  }
+
+  if (isNoResults) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header onFilter={() => setShowFilter(true)} />
+        <View style={styles.stack}>
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyEmoji}>🔎</Text>
+            <Text style={styles.emptyTitle}>No pets match these filters yet</Text>
+            <Text style={styles.emptySub}>Try widening your distance, species, or age preferences to see more adoptable pets nearby.</Text>
+            <View style={styles.emptyActionsRow}>
+              <TouchableOpacity style={[styles.secondaryBtn, styles.secondaryBtnWide]} onPress={() => setShowFilter(true)} activeOpacity={0.85}>
+                <Ionicons name="options-outline" size={16} color={COLORS.ink} />
+                <Text style={[styles.secondaryBtnText, { color: COLORS.ink }]}>Adjust filters</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryBtn, styles.secondaryBtnWide]} onPress={() => loadAnimals(true)} activeOpacity={0.85}>
+                <Ionicons name="refresh-outline" size={16} color={COLORS.coral} />
+                <Text style={[styles.secondaryBtnText, { color: COLORS.coral }]}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+        <FilterSheet visible={showFilter} onClose={() => setShowFilter(false)} />
       </SafeAreaView>
     );
   }
@@ -168,6 +210,20 @@ export default function SwipeScreen() {
             <TouchableOpacity style={styles.retryBtn} onPress={() => { setIndex(0); loadAnimals(true); }}>
               <Text style={styles.retryText}>Start over</Text>
             </TouchableOpacity>
+            <View style={styles.emptyActionsCard}>
+              <Text style={styles.emptyActionsTitle}>Keep helping pets get seen</Text>
+              <Text style={styles.emptyActionsText}>Invite a friend to Pupular or open Adoption Tools for helpful next steps.</Text>
+              <View style={styles.emptyActionsRow}>
+                <TouchableOpacity style={[styles.secondaryBtn, styles.secondaryBtnWide]} onPress={sharePupularApp} activeOpacity={0.85}>
+                  <Ionicons name="share-social-outline" size={16} color={COLORS.sky} />
+                  <Text style={[styles.secondaryBtnText, { color: COLORS.sky }]}>Share Pupular</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.secondaryBtn, styles.secondaryBtnWide]} onPress={() => nav.navigate('AdoptionTools')} activeOpacity={0.85}>
+                  <Ionicons name="construct-outline" size={16} color={COLORS.amber} />
+                  <Text style={[styles.secondaryBtnText, { color: COLORS.amber }]}>Adoption Tools</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         ) : (
           <>
@@ -447,4 +503,22 @@ const styles = StyleSheet.create({
     marginTop: 8, ...SHADOW.button(COLORS.coral),
   },
   retryText: { color: COLORS.white, fontWeight: '800', fontSize: 15 },
+  emptyActionsCard: {
+    width: '100%',
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: 16,
+    gap: 10,
+    marginTop: 6,
+  },
+  emptyActionsTitle: { fontSize: 15, fontWeight: '800', color: COLORS.ink, textAlign: 'center' },
+  emptyActionsText: { fontSize: 13, lineHeight: 19, color: COLORS.muted, textAlign: 'center' },
+  emptyActionsRow: { flexDirection: 'row', gap: 10, width: '100%' },
+  secondaryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: COLORS.white, borderRadius: RADIUS.pill, paddingHorizontal: 14, paddingVertical: 12,
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  secondaryBtnWide: { flex: 1 },
+  secondaryBtnText: { fontSize: 13, fontWeight: '800' },
 });

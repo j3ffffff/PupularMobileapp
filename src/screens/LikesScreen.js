@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, FlatList, Image,
   TouchableOpacity, Dimensions, Share, Alert,
 } from 'react-native';
+import { sharePupularApp } from '../utils/shareApp';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -53,6 +54,20 @@ export default function LikesScreen() {
           <TouchableOpacity style={styles.discoverBtn} onPress={() => nav.navigate('Discover')}>
             <Text style={styles.discoverBtnText}>Start discovering 🐾</Text>
           </TouchableOpacity>
+          <View style={styles.emptyActionsCard}>
+            <Text style={styles.emptyActionsTitle}>Keep the momentum going</Text>
+            <Text style={styles.emptyActionsText}>Share Pupular with a friend or open Adoption Tools for practical next steps while you browse.</Text>
+            <View style={styles.emptyActionsRow}>
+              <TouchableOpacity style={[styles.secondaryBtn, styles.secondaryBtnWide]} onPress={sharePupularApp} activeOpacity={0.85}>
+                <Ionicons name="share-social-outline" size={16} color={COLORS.sky} />
+                <Text style={[styles.secondaryBtnText, { color: COLORS.sky }]}>Share Pupular</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryBtn, styles.secondaryBtnWide]} onPress={() => nav.navigate('AdoptionTools')} activeOpacity={0.85}>
+                <Ionicons name="construct-outline" size={16} color={COLORS.amber} />
+                <Text style={[styles.secondaryBtnText, { color: COLORS.amber }]}>Adoption Tools</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -166,4 +181,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28, paddingVertical: 14, ...SHADOW.button(COLORS.coral),
   },
   discoverBtnText: { color: COLORS.white, fontWeight: '800', fontSize: 15 },
+  emptyActionsCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.xl,
+    padding: 18,
+    gap: 10,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOW.card,
+  },
+  emptyActionsTitle: { fontSize: 15, fontWeight: '800', color: COLORS.ink, textAlign: 'center' },
+  emptyActionsText: { fontSize: 13, lineHeight: 19, color: COLORS.muted, textAlign: 'center' },
+  emptyActionsRow: { flexDirection: 'row', gap: 10, width: '100%' },
+  secondaryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: COLORS.surface, borderRadius: RADIUS.pill, paddingHorizontal: 14, paddingVertical: 12,
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  secondaryBtnWide: { flex: 1 },
+  secondaryBtnText: { fontSize: 13, fontWeight: '800' },
 });
