@@ -13,4 +13,5 @@ README-CANONICAL-PUPULAR-APP-PATH.md
 GoogleService-Info.plist
 
 # Expo local state
+.expo
 .expo/
