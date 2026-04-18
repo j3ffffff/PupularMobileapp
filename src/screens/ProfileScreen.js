@@ -1,21 +1,79 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Alert, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Alert, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useNavigation } from '@react-navigation/native';
-import { useUser } from '../context/AppContext';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useAnimals, useUser } from '../context/AppContext';
+import { resetPassword } from '../services/auth';
 import { COLORS, RADIUS, SHADOW } from '../constants/theme';
+import FilterSheet from '../components/FilterSheet';
+import { sharePupularApp } from '../utils/shareApp';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
-  const { profile, liked, superLiked, stats, finishOnboarding } = useUser();
+  const tabBarHeight = useBottomTabBarHeight();
+  const { filters } = useAnimals();
+  const { profile, liked, superLiked, stats, finishOnboarding, authUser, syncing, authReady, handleSignIn, handleEmailSignUp, handleEmailSignIn, handleSignOut } = useUser();
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(profile.name || '');
+  const [showFilter, setShowFilter] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
+
+  // Email auth state
+  const [isSignUp, setIsSignUp] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailName, setEmailName] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
+    }
+  }, []);
 
   const saveName = () => {
     finishOnboarding({ ...profile, name: nameInput.trim() || 'Pet Lover' });
     setEditingName(false);
   };
+
+  const handleEmailAuth = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = emailName.trim();
+
+    if (!normalizedEmail || !password) {
+      Alert.alert('Missing Fields', 'Please enter your email and password.');
+      return;
+    }
+    if (isSignUp && password.length < 6) {
+      Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+      return;
+    }
+    setAuthLoading(true);
+    try {
+      if (isSignUp) {
+        await handleEmailSignUp(normalizedEmail, password, normalizedName || undefined);
+      } else {
+        await handleEmailSignIn(normalizedEmail, password);
+      }
+      setEmail('');
+      setPassword('');
+      setEmailName('');
+    } catch (e) {
+      const msg = e.code === 'auth/email-already-in-use' ? 'This email already has an account. Try signing in instead.'
+        : e.code === 'auth/invalid-email' ? 'Please enter a valid email address.'
+        : e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' ? 'Incorrect email or password.'
+        : e.code === 'auth/user-not-found' ? 'No account found with this email. Try creating one.'
+        : e.message;
+      Alert.alert(isSignUp ? 'Sign Up Failed' : 'Sign In Failed', msg);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleInviteFriend = () => sharePupularApp();
 
   const Row = ({ icon, label, value, color = COLORS.coral, onPress }) => (
     <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
@@ -30,7 +88,11 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabBarHeight + 24 }]}
+      >
         {/* Avatar */}
         <View style={styles.avatar}>
           <Text style={styles.avatarEmoji}>🐾</Text>
@@ -79,21 +141,154 @@ export default function ProfileScreen() {
           </View>
         )}
 
+        {/* Account — Sign In */}
+        {!authUser && authReady && (
+          <View style={styles.syncCard}>
+            <Text style={styles.syncEmoji}>☁️</Text>
+            <Text style={styles.syncTitle}>Sync Your Data</Text>
+            <Text style={styles.syncSub}>Sign in to save your likes across devices</Text>
+
+            {/* Apple Sign In */}
+            {appleAvailable && (
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                cornerRadius={25}
+                style={styles.appleBtn}
+                onPress={async () => {
+                  try {
+                    await handleSignIn();
+                  } catch (e) {
+                    if (e.code !== 'ERR_REQUEST_CANCELED') {
+                      Alert.alert('Sign In Failed', e.message);
+                    }
+                  }
+                }}
+              />
+            )}
+
+            {/* Divider */}
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Email form */}
+            {isSignUp && (
+              <TextInput
+                style={styles.authInput}
+                placeholder="Your name"
+                placeholderTextColor={COLORS.muted}
+                value={emailName}
+                onChangeText={setEmailName}
+                autoCapitalize="words"
+                autoComplete="name"
+              />
+            )}
+            <TextInput
+              style={styles.authInput}
+              placeholder="Email"
+              placeholderTextColor={COLORS.muted}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
+            <TextInput
+              style={styles.authInput}
+              placeholder="Password"
+              placeholderTextColor={COLORS.muted}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
+            />
+            <TouchableOpacity style={styles.emailBtn} onPress={handleEmailAuth} activeOpacity={0.85} disabled={authLoading}>
+              {authLoading
+                ? <ActivityIndicator color={COLORS.white} />
+                : <Text style={styles.emailBtnText}>{isSignUp ? 'Create Account' : 'Sign In'}</Text>
+              }
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setIsSignUp((v) => !v)}>
+              <Text style={styles.toggleText}>
+                {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Create one"}
+              </Text>
+            </TouchableOpacity>
+            {!isSignUp && (
+              <TouchableOpacity onPress={() => {
+                if (!email) {
+                  Alert.alert('Enter Your Email', 'Type your email above, then tap Forgot Password.');
+                  return;
+                }
+                Alert.alert('Reset Password', `Send a password reset link to ${email}?`, [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Send', onPress: async () => {
+                    try {
+                      await resetPassword(email);
+                      Alert.alert('Email Sent', 'Check your inbox for a password reset link.');
+                    } catch (e) {
+                      Alert.alert('Error', e.code === 'auth/user-not-found' ? 'No account found with this email.' : e.message);
+                    }
+                  }},
+                ]);
+              }}>
+                <Text style={styles.forgotText}>Forgot password?</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {authUser && (
+          <View style={styles.syncCard}>
+            <View style={styles.syncedRow}>
+              <Text style={styles.syncEmoji}>☁️</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.syncTitle}>{syncing ? 'Syncing...' : 'Synced'}</Text>
+                <Text style={styles.syncSub}>{authUser.email || 'Apple ID'}</Text>
+              </View>
+              <TouchableOpacity style={styles.signOutBtn} onPress={() => {
+                Alert.alert('Sign Out', 'Your data will stay on this device but won\'t sync until you sign back in.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Sign Out', style: 'destructive', onPress: handleSignOut },
+                ]);
+              }}>
+                <Text style={styles.signOutText}>Sign Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* Settings */}
         <Text style={styles.sectionLabel}>SETTINGS</Text>
         <View style={styles.card}>
-          <Row 
-            icon="person-outline" 
-            label="Edit Preferences" 
+          <Row
+            icon="person-outline"
+            label="Edit Preferences"
             value="Location, species"
-            color="#9B59B6" 
-            onPress={() => navigation.navigate('EditPreferences')} 
+            color="#9B59B6"
+            onPress={() => navigation.navigate('EditPreferences')}
           />
           <Row icon="location-outline" label="Location" value={profile.postalcode} color={COLORS.coral} />
+          <Row icon="navigate-outline" label="Distance" value={`${filters.miles} miles`} color={COLORS.likeGreen} onPress={() => setShowFilter(true)} />
           <Row icon="notifications-outline" label="Notifications" color="#FF9A56" onPress={() => Alert.alert(
             '🔔 Notifications',
             'Push notifications are coming soon! You\'ll get alerts when new pets matching your preferences are added nearby.',
             [{ text: 'Got it', style: 'cancel' }]
+          )} />
+        </View>
+
+        {/* Resources */}
+        <Text style={styles.sectionLabel}>RESOURCES</Text>
+        <View style={styles.card}>
+          <Row icon="construct-outline" label="Adoption Tools" value="Checklist, insurance, invite" color={COLORS.amber} onPress={() => navigation.navigate('AdoptionTools')} />
+          <Row icon="share-social-outline" label="Invite a Friend" value="Help more pets get seen" color={COLORS.sky} onPress={handleInviteFriend} />
+          <Row icon="checkmark-done-outline" label="New Pet Checklist" value="Prep before you adopt" color={COLORS.likeGreen} onPress={() => Linking.openURL('https://www.pupular.app/checklist')} />
+          <Row icon="shield-checkmark-outline" label="Pet Insurance" value="Helpful value-add" color={COLORS.amber} onPress={() => Alert.alert(
+            'Pet Insurance',
+            'Pupular may earn a referral commission from insurance partners at no extra cost to you. We only link to offers that can be genuinely useful for new adopters.',
+            [{ text: 'Open Guide', onPress: () => Linking.openURL('https://www.pupular.app/insurance') }, { text: 'Cancel', style: 'cancel' }]
           )} />
         </View>
 
@@ -110,8 +305,9 @@ export default function ProfileScreen() {
           <Row icon="document-text-outline" label="Privacy Policy" color={COLORS.muted} onPress={() => Linking.openURL('https://pupular.app/privacy')} />
         </View>
 
-        <Text style={styles.footer}>🐾 Pupular v1.0 · Made with ❤️ for pets</Text>
+        <Text style={styles.footer}>🐾 Pupular v1.2 · Made with ❤️ for pets</Text>
       </ScrollView>
+      <FilterSheet visible={showFilter} onClose={() => setShowFilter(false)} />
     </SafeAreaView>
   );
 }
@@ -128,6 +324,7 @@ function Stat({ n, label, emoji }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.surface },
+  scrollContent: { flexGrow: 1 },
   avatar: {
     width: 90, height: 90, borderRadius: 45,
     backgroundColor: COLORS.coralGlow, alignSelf: 'center',
@@ -184,4 +381,36 @@ const styles = StyleSheet.create({
   rowLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: COLORS.ink },
   rowValue: { fontSize: 13, color: COLORS.muted },
   footer: { textAlign: 'center', color: COLORS.muted, fontSize: 12, margin: 32 },
+  // Sync / Auth
+  syncCard: {
+    backgroundColor: COLORS.white, borderRadius: RADIUS.xl,
+    marginHorizontal: 20, marginTop: 14, padding: 20,
+    alignItems: 'center', gap: 8, ...SHADOW.soft,
+  },
+  syncEmoji: { fontSize: 32 },
+  syncTitle: { fontSize: 16, fontWeight: '800', color: COLORS.ink },
+  syncSub: { fontSize: 13, color: COLORS.muted, textAlign: 'center' },
+  appleBtn: { width: '100%', height: 50, marginTop: 4 },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 4 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
+  dividerText: { marginHorizontal: 14, fontSize: 13, color: COLORS.muted, fontWeight: '600' },
+  authInput: {
+    width: '100%', backgroundColor: COLORS.surface, borderRadius: RADIUS.lg,
+    paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, fontWeight: '600',
+    color: COLORS.ink,
+  },
+  emailBtn: {
+    width: '100%', backgroundColor: COLORS.coral, borderRadius: RADIUS.pill,
+    paddingVertical: 15, alignItems: 'center', marginTop: 4,
+    ...SHADOW.button(COLORS.coral),
+  },
+  emailBtnText: { color: COLORS.white, fontSize: 16, fontWeight: '800' },
+  toggleText: { fontSize: 13, color: COLORS.coral, fontWeight: '600', marginTop: 4 },
+  forgotText: { fontSize: 13, color: COLORS.muted, fontWeight: '600', marginTop: 2 },
+  syncedRow: { flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%' },
+  signOutBtn: {
+    backgroundColor: COLORS.surface, borderRadius: RADIUS.pill,
+    paddingHorizontal: 14, paddingVertical: 8,
+  },
+  signOutText: { fontSize: 13, fontWeight: '600', color: COLORS.muted },
 });
