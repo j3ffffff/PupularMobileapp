@@ -21,6 +21,12 @@ export async function saveCloudData(uid, data) {
   }
 }
 
+const isMeaningfulValue = (value) => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  return true;
+};
+
 export function mergeWithCloud(cloudData, localData) {
   if (!cloudData) return localData;
 
@@ -31,19 +37,33 @@ export function mergeWithCloud(cloudData, localData) {
   const superLikedMap = new Map();
   [...(cloudData.superLiked || []), ...(localData.superLiked || [])].forEach((a) => superLikedMap.set(a.id, a));
 
+  const cloudProfile = cloudData.profile || {};
+  const localProfile = localData.profile || {};
+  const mergedProfile = {
+    ...cloudProfile,
+    onboarded: Boolean(cloudProfile.onboarded || localProfile.onboarded),
+  };
+
+  Object.entries(localProfile).forEach(([key, value]) => {
+    if (key === 'onboarded') return;
+    if (isMeaningfulValue(value)) {
+      mergedProfile[key] = value;
+    }
+  });
+
   return {
     liked: Array.from(likedMap.values()),
     superLiked: Array.from(superLikedMap.values()),
-    profile: {
-      ...(cloudData.profile || {}),
-      ...(localData.profile || {}),
-    },
+    profile: mergedProfile,
     stats: {
       totalSwiped: Math.max(
         cloudData.stats?.totalSwiped || 0,
         localData.stats?.totalSwiped || 0
       ),
-      likeStreak: localData.stats?.likeStreak || 0,
+      likeStreak: Math.max(
+        cloudData.stats?.likeStreak || 0,
+        localData.stats?.likeStreak || 0
+      ),
     },
   };
 }

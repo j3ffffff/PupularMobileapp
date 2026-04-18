@@ -40,20 +40,23 @@ export default function ProfileScreen() {
   };
 
   const handleEmailAuth = async () => {
-    if (!email || !password) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = emailName.trim();
+
+    if (!normalizedEmail || !password) {
       Alert.alert('Missing Fields', 'Please enter your email and password.');
       return;
     }
-    if (password.length < 6) {
+    if (isSignUp && password.length < 6) {
       Alert.alert('Weak Password', 'Password must be at least 6 characters.');
       return;
     }
     setAuthLoading(true);
     try {
       if (isSignUp) {
-        await handleEmailSignUp(email, password, emailName || undefined);
+        await handleEmailSignUp(normalizedEmail, password, normalizedName || undefined);
       } else {
-        await handleEmailSignIn(email, password);
+        await handleEmailSignIn(normalizedEmail, password);
       }
       setEmail('');
       setPassword('');
