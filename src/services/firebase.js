@@ -3,14 +3,13 @@ import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Replace these placeholders with your real Firebase project config before enabling auth/sync.
 const firebaseConfig = {
-  apiKey: 'YOUR_FIREBASE_API_KEY',
+  apiKey: 'AIzaSyC_0fIlpB44WqzkWv885sywVSXAK4Qvuzw',
   authDomain: 'pupular-5affc.firebaseapp.com',
   projectId: 'pupular-5affc',
   storageBucket: 'pupular-5affc.firebasestorage.app',
   messagingSenderId: '826886872344',
-  appId: '1:826886872344:web:d881249a28b4e92d0bd26d',
+  appId: '1:826886872344:ios:ebe4d103a03c15ee0bd26d',
 };
 
 let app = null;
