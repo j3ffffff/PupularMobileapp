@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { searchAnimals } from '../services/rescueGroupsApi';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../services/firebase';
-import { signInWithApple, signUpWithEmail, signInWithEmail, signOut } from '../services/auth';
+import { signInWithApple, signInWithGoogle, signUpWithEmail, signInWithEmail, signOut } from '../services/auth';
 import { loadCloudData, saveCloudData, mergeWithCloud } from '../services/cloudSync';
 
 function prioritizePhotoRichAnimals(items = []) {
@@ -280,6 +280,14 @@ export function UserProvider({ children }) {
     return user;
   }, [profile.name]);
 
+  const handleGoogleSignIn = useCallback(async () => {
+    const { user, displayName } = await signInWithGoogle();
+    if (displayName && !profile.name) {
+      setProfile((prev) => ({ ...prev, name: displayName }));
+    }
+    return user;
+  }, [profile.name]);
+
   const handleEmailSignUp = useCallback(async (email, password, name) => {
     const { user, displayName } = await signUpWithEmail(email, password, name);
     if (displayName && !profile.name) {
@@ -306,7 +314,7 @@ export function UserProvider({ children }) {
       liked, passed, superLiked, profile, profileReady, stats,
       authUser, syncing, authReady,
       likeAnimal, passAnimal, superLikeAnimal, unlikeAnimal, finishOnboarding,
-      handleSignIn, handleEmailSignUp, handleEmailSignIn, handleSignOut,
+      handleSignIn, handleGoogleSignIn, handleEmailSignUp, handleEmailSignIn, handleSignOut,
     }}>
       {children}
     </UserContext.Provider>

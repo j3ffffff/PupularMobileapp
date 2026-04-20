@@ -42,6 +42,12 @@
     "plugins": [
       "expo-location",
       "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.826886872344-psc53sfu1p0dbfhohps17fp2a78qbqs1"
+        }
+      ],
       "expo-font"
     ],
     "owner": "jfeuerwashere"

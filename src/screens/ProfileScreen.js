@@ -15,7 +15,7 @@ export default function ProfileScreen() {
   const navigation = useNavigation();
   const tabBarHeight = useBottomTabBarHeight();
   const { filters } = useAnimals();
-  const { profile, liked, superLiked, stats, finishOnboarding, authUser, syncing, authReady, handleSignIn, handleEmailSignUp, handleEmailSignIn, handleSignOut } = useUser();
+  const { profile, liked, superLiked, stats, finishOnboarding, authUser, syncing, authReady, handleSignIn, handleGoogleSignIn, handleEmailSignUp, handleEmailSignIn, handleSignOut } = useUser();
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(profile.name || '');
   const [showFilter, setShowFilter] = useState(false);
@@ -165,6 +165,36 @@ export default function ProfileScreen() {
                   }
                 }}
               />
+            )}
+
+            {/* Google Sign In */}
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity
+                style={styles.googleBtn}
+                activeOpacity={0.85}
+                onPress={async () => {
+                  try {
+                    setAuthLoading(true);
+                    await handleGoogleSignIn();
+                  } catch (e) {
+                    if (e.message !== 'Google sign-in was cancelled.') {
+                      Alert.alert('Google Sign In Failed', e.message);
+                    }
+                  } finally {
+                    setAuthLoading(false);
+                  }
+                }}
+                disabled={authLoading}
+              >
+                {authLoading ? (
+                  <ActivityIndicator color={COLORS.ink} />
+                ) : (
+                  <>
+                    <Ionicons name="logo-google" size={18} color={COLORS.ink} />
+                    <Text style={styles.googleBtnText}>Continue with Google</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             )}
 
             {/* Divider */}
@@ -391,6 +421,13 @@ const styles = StyleSheet.create({
   syncTitle: { fontSize: 16, fontWeight: '800', color: COLORS.ink },
   syncSub: { fontSize: 13, color: COLORS.muted, textAlign: 'center' },
   appleBtn: { width: '100%', height: 50, marginTop: 4 },
+  googleBtn: {
+    width: '100%', minHeight: 50, marginTop: 4,
+    borderRadius: RADIUS.pill, borderWidth: 1, borderColor: COLORS.border,
+    backgroundColor: COLORS.white, alignItems: 'center', justifyContent: 'center',
+    flexDirection: 'row', gap: 10,
+  },
+  googleBtnText: { color: COLORS.ink, fontSize: 14, fontWeight: '700' },
   dividerRow: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 4 },
   dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
   dividerText: { marginHorizontal: 14, fontSize: 13, color: COLORS.muted, fontWeight: '600' },
