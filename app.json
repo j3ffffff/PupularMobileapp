@@ -2,7 +2,7 @@
   "expo": {
     "name": "Pupular",
     "slug": "pupular",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "scheme": "pupular",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "app.pupular",
-      "buildNumber": "9",
+      "buildNumber": "10",
       "usesAppleSignIn": true,
       "infoPlist": {
         "CFBundleDisplayName": "Pupular",
