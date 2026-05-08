@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -11,16 +11,7 @@ export default function AdoptionToolsScreen() {
 
   const handleInviteFriend = () => sharePupularApp();
 
-  const openInsurance = () => {
-    Alert.alert(
-      'Pet Insurance',
-      'Pupular may earn a referral commission from insurance partners at no extra cost to you. We only link to offers that can be genuinely useful for new adopters.',
-      [
-        { text: 'Open Guide', onPress: () => Linking.openURL('https://www.pupular.app/insurance') },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
-  };
+  const openInsurance = () => navigation.navigate('PetInsuranceGuide');
 
   const ToolCard = ({ icon, title, subtitle, color, onPress }) => (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
@@ -71,7 +62,7 @@ export default function AdoptionToolsScreen() {
           title="New Pet Checklist"
           subtitle="Prep your home before you adopt"
           color={COLORS.likeGreen}
-          onPress={() => Linking.openURL('https://www.pupular.app/checklist')}
+          onPress={() => navigation.navigate('NewPetChecklist')}
         />
         <ToolCard
           icon="shield-checkmark-outline"

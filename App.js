@@ -17,7 +17,21 @@ import LikesScreen from './src/screens/LikesScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import PetDetailScreen from './src/screens/PetDetailScreen';
 import AdoptionToolsScreen from './src/screens/AdoptionToolsScreen';
+import NewPetChecklistScreen from './src/screens/NewPetChecklistScreen';
+import PetInsuranceGuideScreen from './src/screens/PetInsuranceGuideScreen';
+import AboutPupularScreen from './src/screens/AboutPupularScreen';
+import ContactUsScreen from './src/screens/ContactUsScreen';
+import SharedPetScreen from './src/screens/SharedPetScreen';
+import PrivacyPolicyScreen from './src/screens/PrivacyPolicyScreen';
 
+const linking = {
+  prefixes: ['pupular://', 'https://www.pupular.app', 'https://pupular.app'],
+  config: {
+    screens: {
+      SharedPet: 'animal/:id',
+    },
+  },
+};
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
@@ -82,10 +96,16 @@ function RootNavigator() {
         <Stack.Group>
           <Stack.Screen name="Main" component={MainTabs} />
           <Stack.Screen name="EditPreferences" component={OnboardingScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="PetDetail" component={PetDetailScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="AdoptionTools" component={AdoptionToolsScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="NewPetChecklist" component={NewPetChecklistScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="PetInsuranceGuide" component={PetInsuranceGuideScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="AboutPupular" component={AboutPupularScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="ContactUs" component={ContactUsScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         </Stack.Group>
       )}
+      <Stack.Screen name="SharedPet" component={SharedPetScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="PetDetail" component={PetDetailScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
     </Stack.Navigator>
   );
 }
@@ -95,7 +115,7 @@ export default function App() {
     <SafeAreaProvider>
       <UserProvider>
         <AnimalsProvider>
-          <NavigationContainer>
+          <NavigationContainer linking={linking}>
             <StatusBar style="dark" />
             <RootNavigator />
           </NavigationContainer>

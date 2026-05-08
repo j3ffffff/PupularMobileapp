@@ -31,7 +31,8 @@ export default function PetDetailScreen() {
     const locationLabel = [animal.location?.city || animal.org?.city, animal.location?.state || animal.org?.state]
       .filter(Boolean)
       .join(', ');
-    const canonicalUrl = animal.id ? `https://www.pupular.app/animal/${encodeURIComponent(animal.id)}` : 'https://www.pupular.app';
+    const deepLinkUrl = animal.id ? `pupular://animal/${encodeURIComponent(animal.id)}` : 'pupular://';
+    const appStoreUrl = 'https://apps.apple.com/us/app/pupular-adopt-a-pet/id6761799693';
     const summaryBits = [
       `${animal.name} on Pupular 🐾`,
       animal.breedPrimary ? `${animal.breedPrimary}${animal.isMixed ? ' mix' : ''}` : null,
@@ -42,8 +43,8 @@ export default function PetDetailScreen() {
     try {
       await Share.share({
         title: `Meet ${animal.name}`,
-        message: `${summaryBits.join(' · ')}\n\nCheck out ${animal.name}'s profile: ${canonicalUrl}`,
-        url: canonicalUrl,
+        message: `${summaryBits.join(' · ')}\n\nOpen ${animal.name}'s Pupular profile in the app:\n${deepLinkUrl}\n\nDon't have Pupular yet?\n${appStoreUrl}`,
+        url: deepLinkUrl,
       });
     } catch (error) {
       Alert.alert('Share unavailable', `We couldn't open the share sheet right now. ${error?.message || ''}`.trim());

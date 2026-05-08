@@ -9,7 +9,8 @@
     "production": {
       "ios": {
         "appleId": "jfeuerwashere@gmail.com",
-        "appleTeamId": "MR7SYF354U"
+        "appleTeamId": "MR7SYF354U",
+        "ascAppId": "6761799693"
       }
     }
   }

@@ -80,9 +80,11 @@ export default function ProfileScreen() {
       <View style={[styles.rowIcon, { backgroundColor: color + '18' }]}>
         <Ionicons name={icon} size={19} color={color} />
       </View>
-      <Text style={styles.rowLabel}>{label}</Text>
-      {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-      {onPress && <Ionicons name="chevron-forward" size={16} color={COLORS.muted} style={{ marginLeft: 4 }} />}
+      <View style={styles.rowTextWrap}>
+        <Text style={styles.rowLabel}>{label}</Text>
+        {value ? <Text style={styles.rowValue}>{value}</Text> : null}
+      </View>
+      {onPress && <Ionicons name="chevron-forward" size={16} color={COLORS.muted} style={styles.rowChevron} />}
     </TouchableOpacity>
   );
 
@@ -314,25 +316,17 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <Row icon="construct-outline" label="Adoption Tools" value="Checklist, insurance, invite" color={COLORS.amber} onPress={() => navigation.navigate('AdoptionTools')} />
           <Row icon="share-social-outline" label="Invite a Friend" value="Help more pets get seen" color={COLORS.sky} onPress={handleInviteFriend} />
-          <Row icon="checkmark-done-outline" label="New Pet Checklist" value="Prep before you adopt" color={COLORS.likeGreen} onPress={() => Linking.openURL('https://www.pupular.app/checklist')} />
-          <Row icon="shield-checkmark-outline" label="Pet Insurance" value="Helpful value-add" color={COLORS.amber} onPress={() => Alert.alert(
-            'Pet Insurance',
-            'Pupular may earn a referral commission from insurance partners at no extra cost to you. We only link to offers that can be genuinely useful for new adopters.',
-            [{ text: 'Open Guide', onPress: () => Linking.openURL('https://www.pupular.app/insurance') }, { text: 'Cancel', style: 'cancel' }]
-          )} />
+          <Row icon="checkmark-done-outline" label="New Pet Checklist" value="Prep before you adopt" color={COLORS.likeGreen} onPress={() => navigation.navigate('NewPetChecklist')} />
+          <Row icon="shield-checkmark-outline" label="Pet Insurance" value="Helpful value-add" color={COLORS.amber} onPress={() => navigation.navigate('PetInsuranceGuide')} />
         </View>
 
         {/* About */}
         <Text style={styles.sectionLabel}>ABOUT</Text>
         <View style={styles.card}>
-          <Row icon="heart-outline" label="About Pupular" color={COLORS.coral} onPress={() => Alert.alert(
-            '🐾 About Pupular',
-            'Pupular helps you find your forever pet.\n\nSwipe through thousands of rescue animals near you — dogs, cats, rabbits, and more. Each swipe could save a life.\n\nPowered by RescueGroups.org · Free forever.',
-            [{ text: 'Visit Website', onPress: () => Linking.openURL('https://pupular.app') }, { text: 'Close', style: 'cancel' }]
-          )} />
+          <Row icon="heart-outline" label="About Pupular" color={COLORS.coral} onPress={() => navigation.navigate('AboutPupular')} />
           <Row icon="globe-outline" label="RescueGroups.org" value="Powered by" color={COLORS.sky} onPress={() => Linking.openURL('https://rescuegroups.org')} />
-          <Row icon="mail-outline" label="Contact Us" color={COLORS.mint} onPress={() => Linking.openURL('mailto:hello@pupular.app')} />
-          <Row icon="document-text-outline" label="Privacy Policy" color={COLORS.muted} onPress={() => Linking.openURL('https://pupular.app/privacy')} />
+          <Row icon="mail-outline" label="Contact Us" color={COLORS.mint} onPress={() => navigation.navigate('ContactUs')} />
+          <Row icon="document-text-outline" label="Privacy Policy" color={COLORS.muted} onPress={() => navigation.navigate('PrivacyPolicy')} />
         </View>
 
         <Text style={styles.footer}>🐾 Pupular v1.2 · Made with ❤️ for pets</Text>
@@ -408,8 +402,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: COLORS.border,
   },
   rowIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  rowLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: COLORS.ink },
-  rowValue: { fontSize: 13, color: COLORS.muted },
+  rowTextWrap: { flex: 1, minWidth: 0 },
+  rowLabel: { fontSize: 15, fontWeight: '600', color: COLORS.ink },
+  rowValue: { fontSize: 13, color: COLORS.muted, marginTop: 2 },
+  rowChevron: { marginLeft: 8, flexShrink: 0 },
   footer: { textAlign: 'center', color: COLORS.muted, fontSize: 12, margin: 32 },
   // Sync / Auth
   syncCard: {
